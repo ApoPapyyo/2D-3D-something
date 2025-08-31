@@ -9,10 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(APPLE)
     message(STATUS "Building on macOS")
+    find_package(SDL2 REQUIRED)
+    find_package(SDL2_image REQUIRED)
     # macOS専用の設定を書く
     include_directories(
         ${CMAKE_SOURCE_DIR}/src
-        /opt/homebrew/opt/sdl2/include
+        ${SDL2_INCLUDE_DIRS}
         /opt/homebrew/opt/sdl2_image/include
     )
 elseif(UNIX)
@@ -24,7 +26,6 @@ elseif(UNIX)
     include_directories(
         ${CMAKE_SOURCE_DIR}/src
         ${SDL2_INCLUDE_DIRS}
-        ${SDL2_image_INCLUDE_DIRS}
     )
 endif()
 
@@ -40,8 +41,9 @@ if(APPLE)
     message(STATUS "Building on macOS")
     # macOS専用の設定を書く
     target_link_libraries(lib3dg PUBLIC
-        /opt/homebrew/opt/sdl2/lib/libSDL2.dylib
-        /opt/homebrew/opt/sdl2_image/lib/libSDL2_image.dylib
+        SDL2::SDL2
+        SDL2::SDL2main
+        SDL2_image::SDL2_image
     )
 elseif(UNIX)
     message(STATUS "Building on Linux")
