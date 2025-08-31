@@ -36,24 +36,11 @@ list(REMOVE_ITEM LIB_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 
 # ライブラリとしてビルド
-add_library(lib3dg STATIC ${LIB_SOURCES})
-if(APPLE)
-    message(STATUS "Building on macOS")
-    # macOS専用の設定を書く
-    target_link_libraries(lib3dg PUBLIC
-        SDL2::SDL2
-        SDL2::SDL2main
-        SDL2_image::SDL2_image
-    )
-elseif(UNIX)
-    message(STATUS "Building on Linux")
-    # Linux専用の設定を書く
-    target_link_libraries(lib3dg PUBLIC
-        SDL2::SDL2
-        SDL2::SDL2main
-        SDL2_image::SDL2_image
-    )
-endif()
+target_link_libraries(lib3dg PUBLIC
+    SDL2::SDL2
+    SDL2::SDL2main
+    SDL2_image::SDL2_image
+)
 
 
 add_executable(3dg src/main.cpp)
