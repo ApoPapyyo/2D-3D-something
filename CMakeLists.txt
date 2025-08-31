@@ -34,6 +34,8 @@ endif()
 file(GLOB LIB_SOURCES src/*.cpp)
 list(REMOVE_ITEM LIB_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
+add_library(lib3dg ${LIB_SOURCES})
+
 
 # ライブラリとしてビルド
 target_link_libraries(lib3dg PUBLIC
