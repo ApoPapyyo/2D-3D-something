@@ -32,6 +32,7 @@ public:
     void set_polar(double th);
 
     operator v2mat() const;
+    explicit operator v2mat_pure() const;
     operator std::string() const;
 
     vec2d& operator=(const vec2d& n);
@@ -43,6 +44,7 @@ public:
     vec2d& operator*=(const v2convmat& a);
     vec2d& operator/=(const vec2d& a);
     vec2d& operator/=(double a);
+    vec2d operator-() const;
 
     friend vec2d operator+(const vec2d& a, const vec2d& b);
     friend vec2d operator-(const vec2d& a, const vec2d& b);
@@ -57,6 +59,35 @@ public:
     static v2convmat move(const vec2d& diff);//平行移動用の行列出力
     static v2convmat rotate(double th);//回転用の行列出力
     static v2convmat scale(double n);//再スケーリング用行列出力
+};
+
+struct line2d {
+    vec2d begin, end;
+    inline line2d()
+        : begin()
+        , end()
+    {}
+    inline line2d(vec2d b, vec2d e)
+        : begin(b)
+        , end(e)
+    {}
+};
+
+struct rect2d {
+    vec2d ref, size;
+    inline rect2d()
+        : ref()
+        , size()
+    {}
+    inline rect2d(vec2d r, vec2d s)
+        : ref(r)
+        , size(s)
+    {}
+    inline double area() const
+    {
+        auto a = static_cast<v2mat_pure>(size);
+        return a * column_vector<2, double>({1.0, 1.0});
+    }
 };
 
 }

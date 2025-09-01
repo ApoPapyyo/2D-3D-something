@@ -218,10 +218,34 @@ matrix<1, N, T> row_vector(T (&data)[N])
 }
 
 template <int N, typename T = double>
+matrix<1, N, T> row_vector(std::initializer_list<T> init)
+{
+    matrix<1, N, T> ret((T)0);
+    int i = 0;
+    for(const auto& val: init) {
+        if(i >= N) break;
+        ret[0][i++] = val;
+    }
+    return ret;
+}
+
+template <int N, typename T = double>
 matrix<N, 1, T> column_vector(T (&data)[N])
 {
     matrix<N, 1, T> ret((T)0);
     for(int i = 0; i < N; i++) ret[i][0] = data[i];
+    return ret;
+}
+
+template <int N, typename T = double>
+matrix<N, 1, T> column_vector(std::initializer_list<T> init)
+{
+    matrix<N, 1, T> ret((T)0);
+    int i = 0;
+    for(const auto& val: init) {
+        if(i >= N) break;
+        ret[i++][0] = val;
+    }
     return ret;
 }
 

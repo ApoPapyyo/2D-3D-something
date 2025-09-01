@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <map>
+#include "vec2d.hpp"
 
 namespace okazawa
 {
@@ -18,6 +19,14 @@ public:
     virtual void set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) = 0;
     virtual void scrclear() = 0;
     virtual void update() = 0;
+    virtual void draw_point(vec2d pos) = 0;
+    virtual void draw_points(const std::vector<vec2d>& pos) = 0;
+    virtual void draw_line(line2d pos) = 0;
+    virtual void draw_lines(const std::vector<vec2d>& pos) = 0;
+    virtual void draw_rect(rect2d pos) = 0;
+    virtual void draw_rects(const std::vector<rect2d>& pos) = 0;
+    virtual void fill_rect(rect2d pos) = 0;
+    virtual void fill_rects(const std::vector<rect2d>& pos) = 0;
 };
 
 class SDL {

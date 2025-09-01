@@ -95,6 +95,11 @@ vec2d::operator v2mat () const
     return v2mat{{m_data[0][0], m_data[0][1], 1.0}};
 }
 
+vec2d::operator v2mat_pure () const
+{
+    return m_data;
+}
+
 vec2d::operator std::string() const
 {
     std::stringstream ss;
@@ -207,6 +212,14 @@ vec2d& vec2d::operator/=(double a)
     x /= a;
     y /= a;
     return *this;
+}
+
+vec2d vec2d::operator-() const
+{
+    vec2d ret(*this);
+    ret.x *= -1;
+    ret.y *= -1;
+    return ret;
 }
 
 static bool double_equal(double a, double b, double eps = 1e-9) {

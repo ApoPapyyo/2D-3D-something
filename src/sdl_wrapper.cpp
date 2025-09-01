@@ -1,4 +1,4 @@
-#include "sdlwrapper.hpp"
+#include "sdl_wrapper.hpp"
 #include <iostream>
 #include <cstdlib>
 
@@ -114,6 +114,64 @@ public:
     void update() override
     {
         SDL_RenderPresent(m_rend);
+    }
+
+    void draw_point(vec2d pos) override
+    {
+        SDL_RenderDrawPoint(m_rend, pos.get_x(), pos.get_y());
+    }
+
+    void draw_points(const vector<vec2d>& pos) override
+    {
+        vector<SDL_Point> tmp(pos.size());
+        for(const auto& p: pos) {
+            tmp.push_back((SDL_Point){.x = p.get_x(), .y = p.get_y()});
+        }
+        SDL_RenderDrawPoints(m_rend, tmp.data(), tmp.size());
+    }
+
+    void draw_line(line2d pos) override
+    {
+        SDL_RenderDrawLine(m_rend, pos.begin.get_x(), pos.begin.get_y(), pos.end.get_x(), pos.end.get_y());
+    }
+
+    void draw_lines(const vector<vec2d>& pos) override
+    {
+        vector<SDL_Point> tmp(pos.size());
+        for(const auto& p: pos) {
+            tmp.push_back((SDL_Point){p.get_x(), p.get_y()});
+        }
+        SDL_RenderDrawLines(m_rend, tmp.data(), tmp.size());
+    }
+
+    void draw_rect(rect2d pos) override
+    {
+        SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
+        SDL_RenderDrawRect(m_rend, &tmp);
+    }
+
+    void draw_rects(const vector<rect2d>& pos) override
+    {
+        vector<SDL_Rect> tmp(pos.size());
+         for(const auto& p: pos) {
+            tmp.push_back((SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()});
+        }
+        SDL_RenderDrawRects(m_rend, tmp.data(), tmp.size());
+    }
+
+    void fill_rect(rect2d pos) override
+    {
+        SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
+        SDL_RenderFillRect(m_rend, &tmp);
+    }
+
+    void fill_rects(const vector<rect2d>& pos) override
+    {
+        vector<SDL_Rect> tmp(pos.size());
+         for(const auto& p: pos) {
+            tmp.push_back((SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()});
+        }
+        SDL_RenderFillRects(m_rend, tmp.data(), tmp.size());
     }
 };
 
