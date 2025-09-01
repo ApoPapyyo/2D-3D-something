@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cstdlib>
 
+#define Error(mes) cerr << __func__<< "(): " << mes << endl
+
 extern "C" {
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -14,6 +16,7 @@ using std::cerr;
 using std::endl;
 using std::string;
 using std::vector;
+using std::map;
 
 Window::~Window()
 {
@@ -22,7 +25,7 @@ Window::~Window()
 class _Window : public Window{
     SDL_Window *m_win;
     SDL_Renderer *m_rend;
-    vector<SDL_Texture*> m_textures;
+    map<uint32_t, SDL_Texture*> m_textures;
     bool inited;
 public:
     _Window(const string& title, int width, int height)
@@ -39,13 +42,13 @@ public:
             SDL_WINDOW_SHOWN                // 表示フラグ
         );
         if(!m_win) {
-            cerr << "okazawa::_Window::_Window(): " << SDL_GetError() << endl;
+            Error(SDL_GetError());
             return;
         }
 
         m_rend = SDL_CreateRenderer(m_win, -1, SDL_RENDERER_ACCELERATED);
         if(!m_rend) {
-            cerr << "okazawa::_Window::_Window(): " << SDL_GetError() << endl;
+            Error(SDL_GetError());
             SDL_DestroyWindow(m_win);
             m_win = nullptr;
             return;
@@ -56,7 +59,7 @@ public:
 
     ~_Window()
     {
-        for(auto& t: m_textures) {
+        for(auto& [id, t]: m_textures) {
             SDL_DestroyTexture(t);
             t = nullptr;
         }
@@ -76,53 +79,120 @@ public:
         return inited;
     }
 
-    int add_texture(const string& image_path) override
+    uint32_t mktexture(const string& image_path) override
     {
-        if(!inited) return 1;
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return 0;
+        }
         SDL_Surface* s = IMG_Load(image_path.c_str());
         if(!s) {
-            cerr << "okazawa::Window::add_texture(): " << IMG_GetError() << endl;
-            return 1;
+            Error(IMG_GetError());
+            return 0;
         }
 
         SDL_Texture* t = SDL_CreateTextureFromSurface(m_rend, s);
         SDL_FreeSurface(s);
 
         if(!t) {
-            cerr << "okazawa::Window::add_texture(): " << SDL_GetError() << endl;
-            return 1;
+            Error(SDL_GetError());
+            return 0;
         }
-        m_textures.push_back(t);
-        return 0;
+        uint32_t id = 1;
+        for(const auto&[i, t] : m_textures) {
+            if(id == i) id++;
+        }
+        m_textures[id] = t;
+        return id;
+    }
+
+    uint32_t mktexture(int sizex, int sizey) override
+    {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return 0;
+        }
+        SDL_Texture* t = SDL_CreateTexture(m_rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, sizex, sizey);
+        if(!t) {
+            Error(SDL_GetError());
+            return 0;
+        }
+
+        uint32_t id = 1;
+        for(const auto&[i, t] : m_textures) {
+            if(id == i) id++;
+        }
+        m_textures[id] = t;
+        return id;
+    }
+
+    void rmtexture(uint32_t id) override
+    {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
+        if(!m_textures.count(id)) {
+           Error("no such a texture.");
+            return;
+        }
+
+        SDL_Texture* t = m_textures[id];
+        SDL_DestroyTexture(t);
+        m_textures.erase(id);
     }
 
     uint32_t get_id() const override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return 0;
+        }
         return SDL_GetWindowID(m_win);
     }
 
     void set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         SDL_SetRenderDrawColor(m_rend, r, g, b, a);
     }
 
     void scrclear() override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         SDL_RenderClear(m_rend);
     }
 
     void update() override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         SDL_RenderPresent(m_rend);
     }
 
     void draw_point(vec2d pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         SDL_RenderDrawPoint(m_rend, pos.get_x(), pos.get_y());
     }
 
     void draw_points(const vector<vec2d>& pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         vector<SDL_Point> tmp(pos.size());
         for(const auto& p: pos) {
             tmp.push_back((SDL_Point){.x = p.get_x(), .y = p.get_y()});
@@ -132,11 +202,19 @@ public:
 
     void draw_line(line2d pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         SDL_RenderDrawLine(m_rend, pos.begin.get_x(), pos.begin.get_y(), pos.end.get_x(), pos.end.get_y());
     }
 
     void draw_lines(const vector<vec2d>& pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         vector<SDL_Point> tmp(pos.size());
         for(const auto& p: pos) {
             tmp.push_back((SDL_Point){p.get_x(), p.get_y()});
@@ -146,12 +224,20 @@ public:
 
     void draw_rect(rect2d pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
         SDL_RenderDrawRect(m_rend, &tmp);
     }
 
     void draw_rects(const vector<rect2d>& pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         vector<SDL_Rect> tmp(pos.size());
          for(const auto& p: pos) {
             tmp.push_back((SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()});
@@ -161,17 +247,39 @@ public:
 
     void fill_rect(rect2d pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
         SDL_RenderFillRect(m_rend, &tmp);
     }
 
     void fill_rects(const vector<rect2d>& pos) override
     {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
         vector<SDL_Rect> tmp(pos.size());
          for(const auto& p: pos) {
             tmp.push_back((SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()});
         }
         SDL_RenderFillRects(m_rend, tmp.data(), tmp.size());
+    }
+
+    void draw_texture(uint32_t id, rect2d pos) override
+    {
+        if(!inited) {
+            Error("Instance is not initialized.");
+            return;
+        }
+        if(!m_textures.count(id)) {
+           Error("no such a texture.");
+            return;
+        }
+        SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
+        SDL_RenderCopy(m_rend, m_textures[id], NULL, &tmp);
     }
 };
 
@@ -218,32 +326,32 @@ int SDL::init()
     return 0;
 }
 
-Window* SDL::mkwindow(const string& title, int width, int height)
+uint32_t SDL::mkwindow(const string& title, int width, int height)
 {
     if(!m_inited) {
-        cerr << "okazawa::SDL::mkwindow(): instance is not initialized." << endl;
-        return nullptr;
+        Error("Instance is not initialized.");
+        return 0;
     }
 
     Window* ret = new _Window(title, width, height);
     if(!ret->is_inited()) {
         delete ret;
-        cerr << "okazawa::SDL::mkwindow(): window creating failed." << endl;
-        return nullptr;
+        Error("window creating failed.");
+        return 0;
     }
 
     m_windows[ret->get_id()] = ret;
-    return ret;
+    return ret->get_id();
 }
 
 void SDL::rmwindow(uint32_t winid)
 {
     if(!m_inited) {
-        cerr << "okazawa::SDL::rmwindow(): instance is not initialized." << endl;
+        Error("Instance is not initialized.");
         return;
     }
     if(!m_windows.count(winid)) {
-        cerr << "okazawa::SDL::rmwindow(): no such a window (winid==" << winid << ")." << endl;
+        Error("no such a window (winid==" << winid << ").");
         return;
     }
     auto w = m_windows[winid];
@@ -256,7 +364,7 @@ void SDL::rmwindow(uint32_t winid)
 void SDL::rmwindow(Window* win)
 {
     if(!m_inited) {
-        cerr << "okazawa::SDL::rmwindow(): instance is not initialized." << endl;
+        Error("Instance is not initialized.");
         return;
     }
     for(auto iter = m_windows.begin(); iter != m_windows.end(); ) {
@@ -274,32 +382,42 @@ void SDL::set_user_data_ptr(void *ptr)
     m_user_data = ptr;
 }
 
+vector<uint32_t> SDL::get_winid() const
+{
+    vector<uint32_t> ret;
+    for(const auto& [id, w]: m_windows) {
+        ret.push_back(id);
+    }
+    return ret;
+}
 
 Window* SDL::get_win(uint32_t winid) const
 {
     if(!m_inited) {
-        cerr << "okazawa::SDL::get_win(): instance is not initialized." << endl;
+        Error("Instance is not initialized.");
         return nullptr;
     }
     if(m_windows.count(winid)) {
         return m_windows.at(winid);
     }
-    cerr << "okazawa::SDL::get_win(): winid is invalid." << endl;
+    Error("winid is invalid.");
     return nullptr;
 }
 
 int SDL::mainloop()
 {
     if(!m_inited) {
-        cerr << "okazawa::SDL::mainloop(): instance is not initialized." << endl;
+        Error("Instance is not initialized.");
         return 1;
     }
-    if(callback_funcs.draw== nullptr) {
-        cerr << "okazawa::SDL::mainloop(): draw function is not set." << endl;
+    if(callback_funcs.draw == nullptr) {
+        Error("draw() is not set.");
         return 1;
     }
 
     SDL_Event& e = *reinterpret_cast<SDL_Event *>(m_sdl_event);
+
+    if(callback_funcs.init) callback_funcs.init(this, m_user_data);
 
     while (!m_exit) {
         while (SDL_PollEvent(&e)) {

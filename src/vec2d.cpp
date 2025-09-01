@@ -263,4 +263,72 @@ v2convmat vec2d::scale(double n)
     };
 }
 
+v2convmat vec2d::scale(double nx, double ny)
+{
+    return v2convmat{
+        {nx, 0, 0},
+        {0, ny, 0},
+        {0, 0, 1}
+    };
+}
+
+v2convmat vec2d::skew_x(double th)
+{
+    if(th <= -M_PI/2 || M_PI/2 <= th) {
+        return v2convmat{
+            {1, 0, 0},
+            {0, 1, 0},
+            {0, 0, 1}
+        };
+    }
+    return v2convmat{
+        {1, 0, 0},
+        {std::tan(th), 1, 0},
+        {0, 0, 1}
+    };
+}
+
+v2convmat vec2d::skew_y(double th)
+{
+    if(th <= -M_PI/2 || M_PI/2 <= th) {
+        return v2convmat{
+            {1, 0, 0},
+            {0, 1, 0},
+            {0, 0, 1}
+        };
+    }
+    return v2convmat{
+        {1, std::tan(th), 0},
+        {0, 1, 0},
+        {0, 0, 1}
+    };
+}
+
+v2convmat vec2d::reflect_x()
+{
+    return v2convmat{
+        {1, 0, 0},
+        {0, -1, 0},
+        {0, 0, 1}
+    };
+}
+
+v2convmat vec2d::reflect_y()
+{
+    return v2convmat{
+        {-1, 0, 0},
+        {0, 1, 0},
+        {0, 0, 1}
+    };
+}
+
+v2convmat vec2d::reflect_xy()
+{
+    return v2convmat{
+        {-1, 0, 0},
+        {0, -1, 0},
+        {0, 0, 1}
+    };
+}
+
 }

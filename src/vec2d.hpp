@@ -59,6 +59,13 @@ public:
     static v2convmat move(const vec2d& diff);//平行移動用の行列出力
     static v2convmat rotate(double th);//回転用の行列出力
     static v2convmat scale(double n);//再スケーリング用行列出力
+    static v2convmat scale(double nx, double ny);
+    static v2convmat skew_x(double th);//せん断
+    static v2convmat skew_y(double th);
+    static v2convmat reflect_x();
+    static v2convmat reflect_y();
+    static v2convmat reflect_xy();
+    
 };
 
 struct line2d {
