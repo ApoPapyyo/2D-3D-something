@@ -22,7 +22,7 @@ void init(SDL* o, void* _u)
     u.conv = vec2d::move(-u.rectcentre) * vec2d::rotate(0.01) * vec2d::move(u.rectcentre);
     u.cnt = 0;
     u.plus = true;
-    u.tid = o->get_win(id)->mktexture("test.png");
+    u.tid = o->get_win(id)->mktexture("../test.png");
     if(!u.tid) {
         std::cerr << "読み込めん" << std::endl;
         return;

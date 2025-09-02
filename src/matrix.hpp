@@ -1,11 +1,13 @@
 #ifndef _MATRIX_HPP_
 #define _MATRIX_HPP_
-#include <cstddef>
+#include <cstring>
 #include <cassert>
 #include <string>
 #include <iomanip>
 #include <sstream>
+#include <type_traits>
 #include <iostream>
+#include <cmath>
 
 namespace okazawa
 {
@@ -29,6 +31,9 @@ T operator*(const matrix<1, N, T>& a, const matrix<N, 1, T>& b);
 
 template <int M, int N, int P, typename T = double>
 matrix<M, P, T> operator*(const matrix<M, N, T>& a, const matrix<N, P, T>& b);
+
+template <int M, int N, typename T = double>
+bool operator==(const matrix<M,N,T>& a, const matrix<M,N,T>& b);
 
 template <int M, int N, typename T>
 class matrix {
@@ -93,11 +98,13 @@ public:
 
     const T *operator[](int m) const
     {
+        assert(0 <= m && m < M);
         return &m_data[m * N];
     }
 
     T *operator[](int m)
     {
+        assert(0 <= m && m < M);
         return &m_data[m * N];
     }
 
@@ -134,6 +141,82 @@ public:
             }
         }
         return ret;
+    }
+
+    thistype swap_rows(int m1, int m2) const
+    {
+        assert(0 <= m1 && m1 < M && 0 <= m2 && m2 < M);
+        if(m1 == m2) return *this;
+        thistype ret;
+
+        for(int i = 0; i < M; i++) {
+            if(i == m1) {
+                std::memcpy(&ret.m_data[i*N], &m_data[m2*N], sizeof(T) * N);
+            } else if(i == m2) {
+                std::memcpy(&ret.m_data[i*N], &m_data[m1*N], sizeof(T) * N);
+            } else {
+                std::memcpy(&ret.m_data[i*N], &m_data[i*N], sizeof(T) * N);
+            }
+        }
+        return ret;
+    }
+
+    thistype scale_row(int m, T s) const
+    {
+        assert(0 <= m && m < M && s != (T)0);
+        thistype ret(*this);
+        for(int i = 0; i < N; i++) ret.m_data[m*N + i] *= s;
+        return ret;
+    }
+
+    thistype add_row(int src, int target, T s = (T)1) const
+    {
+        assert(0 <= src && src < M && 0 <= target && target < M && s != (T)0);
+        thistype ret(*this);
+        for(int i = 0; i < N; i++) ret.m_data[target*N + i] += m_data[src*N + i] * s;
+        return ret;
+    }
+
+    thistype swap_columns(int n1, int n2) const
+    {
+        assert(0 <= n1 && n1 < N && 0 <= n2 && n2 < N);
+        if(n1 == n2) return *this;
+        matrix<N, M, T> ret(this->transposed());
+        return ret.swap_rows(n1, n2).transposed();
+    }
+
+    thistype scale_column(int n, T s) const
+    {
+        assert(0 <= n && n < N && s != (T)0);
+        thistype ret(*this);
+        for(int i = 0; i < M; i++) ret.m_data[i*N + n] *= s;
+        return ret;
+    }
+
+    thistype add_column(int src, int target, T s = (T)1) const
+    {
+        assert(0 <= src && src < N && 0 <= target && target < N && s != (T)0);
+        thistype ret(*this);
+        for(int i = 0; i < M; i++) ret.m_data[i*N + target] += m_data[i*N + src] * s;
+        return ret;
+    }
+
+    friend bool operator==(const matrix<M,N,T>& a, const matrix<M,N,T>& b)
+    {
+        bool (*eq)(const T& a, const T& b) = nullptr;
+        if constexpr (std::is_floating_point<T>::value) {
+            eq = [](const T& a, const T& b) {
+                return std::fabs(a - b) < 1e-9;
+            };
+        } else {
+            eq = [](const T& a, const T& b) {
+                return a == b;
+            };
+        }
+        for(int i = 0; i < M*N; i++) {
+            if(!eq(a.m_data[i], b.m_data[i])) return false;
+        }
+        return true;
     }
 };
 
@@ -249,5 +332,42 @@ matrix<N, 1, T> column_vector(std::initializer_list<T> init)
     return ret;
 }
 
+template <int M, int N, typename T = double>
+bool operator!=(const matrix<M,N,T>& a, const matrix<M,N,T>& b)
+{
+    return !(a == b);
+}
+
+template <int M, int N, typename T = double>
+matrix<M, N, T> gaussian_elimination(matrix<M, N, T> A)
+{
+    int row = 0;
+    for(int col = 0; col < N-1 && row < M; col++) {
+        // 1. ピボット選択（最大値を持つ行と交換）
+        int pivot = row;
+        for(int i = row+1; i < M; i++) {
+            if(std::fabs(A[i][col]) > std::fabs(A[pivot][col])) {
+                pivot = i;
+            }
+        }
+        if(std::fabs(A[pivot][col]) < 1e-9) continue; // 0列はスキップ
+        if(pivot != row) A = A.swap_rows(pivot, row);
+
+        // 2. ピボットを 1 に正規化
+        T diag = A[row][col];
+        A = A.scale_row(row, 1.0 / diag);
+
+        // 3. 他の行を消去
+        for(int i = 0; i < M; i++) {
+            if(i == row) continue;
+            if(std::fabs(A[i][col]) > 1e-9) {
+                T factor = -A[i][col];
+                A = A.add_row(row, i, factor);
+            }
+        }
+        row++;
+    }
+    return A;
+}
 }
 #endif

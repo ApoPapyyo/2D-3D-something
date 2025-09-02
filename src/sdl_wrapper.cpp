@@ -194,8 +194,9 @@ public:
             return;
         }
         vector<SDL_Point> tmp(pos.size());
+        int i = 0;
         for(const auto& p: pos) {
-            tmp.push_back((SDL_Point){.x = p.get_x(), .y = p.get_y()});
+            tmp[i++] = (SDL_Point){p.get_x(), p.get_y()};
         }
         SDL_RenderDrawPoints(m_rend, tmp.data(), tmp.size());
     }
@@ -216,8 +217,9 @@ public:
             return;
         }
         vector<SDL_Point> tmp(pos.size());
+        int i = 0;
         for(const auto& p: pos) {
-            tmp.push_back((SDL_Point){p.get_x(), p.get_y()});
+            tmp[i++] = (SDL_Point){p.get_x(), p.get_y()};
         }
         SDL_RenderDrawLines(m_rend, tmp.data(), tmp.size());
     }
@@ -239,8 +241,9 @@ public:
             return;
         }
         vector<SDL_Rect> tmp(pos.size());
+        int i = 0;
          for(const auto& p: pos) {
-            tmp.push_back((SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()});
+            tmp[i++] = (SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()};
         }
         SDL_RenderDrawRects(m_rend, tmp.data(), tmp.size());
     }
@@ -262,8 +265,9 @@ public:
             return;
         }
         vector<SDL_Rect> tmp(pos.size());
+        int i = 0;
          for(const auto& p: pos) {
-            tmp.push_back((SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()});
+            tmp[i++] = (SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()};
         }
         SDL_RenderFillRects(m_rend, tmp.data(), tmp.size());
     }

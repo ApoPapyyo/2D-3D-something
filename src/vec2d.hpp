@@ -65,7 +65,7 @@ public:
     static v2convmat reflect_x();
     static v2convmat reflect_y();
     static v2convmat reflect_xy();
-    
+    static v2convmat project(const vec2d (&before)[4], const vec2d (&after)[4]);
 };
 
 struct line2d {

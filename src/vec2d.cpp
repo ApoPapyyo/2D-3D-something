@@ -31,6 +31,10 @@ vec2d::vec2d(const v2mat& d)
     , x(m_data[0][0])
     , y(m_data[0][1])
 {
+    if(std::fabs(d[0][2]) >= 1e-9) {
+        x /= d[0][2];
+        y /= d[0][2];
+    }
 }
 
 vec2d::vec2d(const v2mat_pure& d)
@@ -222,18 +226,14 @@ vec2d vec2d::operator-() const
     return ret;
 }
 
-static bool double_equal(double a, double b, double eps = 1e-9) {
-    return std::fabs(a - b) < eps;
-}
-
 bool operator==(const vec2d& a, const vec2d& b)
 {
-    return double_equal(a.x, b.x) && double_equal(a.y, b.y);
+    return a.m_data == b.m_data;
 }
 
 bool operator!=(const vec2d& a, const vec2d& b)
 {
-    return !double_equal(a.x, b.x) || !double_equal(a.y, b.y);
+    return a.m_data != b.m_data;
 }
 
 v2convmat vec2d::move(const vec2d& diff)
@@ -329,6 +329,39 @@ v2convmat vec2d::reflect_xy()
         {0, -1, 0},
         {0, 0, 1}
     };
+}
+
+v2convmat vec2d::project(const vec2d (&before)[4], const vec2d (&after)[4])
+{
+    matrix<8, 9, double> sh(0);
+    for(int i = 0; i < 4; i++) {
+        sh[i][0] = before[i].get_x();
+        sh[i][1] = before[i].get_y();
+        sh[i][2] = 1;
+        sh[i][3] = 0;
+        sh[i][4] = 0;
+        sh[i][5] = 0;
+        sh[i][6] = -before[i].get_x() * after[i].get_x();
+        sh[i][7] = -before[i].get_y() * after[i].get_x();
+        sh[i][8] = after[i].get_x();
+
+        sh[i+4][0] = 0;
+        sh[i+4][1] = 0;
+        sh[i+4][2] = 0;
+        sh[i+4][3] = before[i].get_x();
+        sh[i+4][4] = before[i].get_y();
+        sh[i+4][5] = 1;
+        sh[i+4][6] = -before[i].get_x() * after[i].get_y();
+        sh[i+4][7] = -before[i].get_y() * after[i].get_y();
+        sh[i+4][8] = after[i].get_y();
+    }
+    auto ans = gaussian_elimination(sh);
+    v2convmat ret = {
+        {ans[0][8], ans[1][8], ans[2][8]},
+        {ans[3][8], ans[4][8], ans[5][8]},
+        {ans[6][8], ans[7][8], 1.0} // h33=1で固定
+    };
+    return ret.transposed();
 }
 
 }
