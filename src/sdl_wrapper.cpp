@@ -79,7 +79,7 @@ public:
         return inited;
     }
 
-    uint32_t mktexture(const string& image_path) override
+    textureid_t mktexture(const string& image_path) override
     {
         if(!inited) {
             Error("Instance is not initialized.");
@@ -98,7 +98,7 @@ public:
             Error(SDL_GetError());
             return 0;
         }
-        uint32_t id = 1;
+        textureid_t id = 1;
         for(const auto&[i, t] : m_textures) {
             if(id == i) id++;
         }

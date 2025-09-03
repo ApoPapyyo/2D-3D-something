@@ -67,9 +67,6 @@ void draw(SDL* app, Window* win)
 int main()
 {
     SDL app;
-    if(app.is_failed()) {
-        return 1;
-    }
     userdata_t u;
     app.userdata = &u;
     app.callback_funcs.init = init;
