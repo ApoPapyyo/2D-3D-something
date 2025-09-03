@@ -2,6 +2,7 @@
 #define _VEC2D_HPP_
 
 #include "matrix.hpp"
+#include <vector>
 
 namespace okazawa
 {
@@ -15,9 +16,9 @@ class vec2d {
     double& x;
     double& y;
 public:
-    enum class coord_type { Cartesian, Polar };
+    enum coord_type { Cartesian, Polar };
     vec2d();
-    vec2d(double a, double b, coord_type t = coord_type::Cartesian);
+    vec2d(double a, double b, coord_type t = Cartesian);
     vec2d(const v2mat& d);
     vec2d(const v2mat_pure& d);
     vec2d(const vec2d& d);
@@ -90,6 +91,37 @@ struct rect2d {
         : ref(r)
         , size(s)
     {}
+    inline rect2d(const std::vector<vec2d>& points)
+        : ref()
+        , size()
+    {
+        if(!points.size()) return;
+        double xmin = points[0].get_x(), xmax = points[0].get_x(), ymin = points[0].get_y(), ymax = points[0].get_y();
+        for(const auto& p: points) {
+            if(p.get_x() < xmin) xmin = p.get_x();
+            else if(p.get_x() > xmax) xmax = p.get_x();
+            if(p.get_y() < ymin) ymin = p.get_y();
+            else if(p.get_y() > ymax) ymax = p.get_y();
+        }
+        ref = vec2d(xmin, ymin);
+        size = vec2d(xmax-xmin, ymax-ymin);
+    }
+    inline rect2d(const vec2d *points, int s)
+        : ref()
+        , size()
+    {
+        if(!s) return;
+        double xmin = points[0].get_x(), xmax = points[0].get_x(), ymin = points[0].get_y(), ymax = points[0].get_y();
+        for(int i = 0; i < s; i++) {
+            const auto& p = points[i];
+            if(p.get_x() < xmin) xmin = p.get_x();
+            else if(p.get_x() > xmax) xmax = p.get_x();
+            if(p.get_y() < ymin) ymin = p.get_y();
+            else if(p.get_y() > ymax) ymax = p.get_y();
+        }
+        ref = vec2d(xmin, ymin);
+        size = vec2d(xmax-xmin, ymax-ymin);
+    }
     inline double area() const
     {
         auto a = static_cast<v2mat_pure>(size);

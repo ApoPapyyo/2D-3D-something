@@ -1,5 +1,6 @@
 #include "matrix.hpp"
 #include "vec2d.hpp"
+#include "colour.hpp"
 #include "sdl_wrapper.hpp"
 #include <cstdlib>
 using namespace okazawa;
@@ -12,66 +13,65 @@ struct userdata_t {
     vec2d v;
 };
 
-void init(SDL* app, void* _u)
+void init(SDL* app)
 {
     auto winid = app->mkwindow("Gaus test", 800, 600);
     if(!winid) {
         std::exit(1);
     }
-    auto& u = *static_cast<userdata_t*>(_u);
+    auto& u = *static_cast<userdata_t*>(app->userdata);
 
-    auto b = vec2d(100, 100);
-    u.point[0] = vec2d(0, 0) + b;
-    u.point[1] = vec2d(100, 0) + b;
-    u.point[2] = vec2d(100, 100) + b;
-    u.point[3] = vec2d(0, 100) + b;
+    u.point[0] = vec2d(0, 0);
+    u.point[1] = vec2d(100, 0);
+    u.point[2] = vec2d(100, 100);
+    u.point[3] = vec2d(0, 100);
 
-    u.npoint[0] = vec2d(10, 10) + b;
-    u.npoint[1] = vec2d(50, 0) + b;
-    u.npoint[2] = vec2d(100, 100) + b;
-    u.npoint[3] = vec2d(-10, 150) + b;
+    u.npoint[0] = vec2d(10, 10);
+    u.npoint[1] = vec2d(50, 0);
+    u.npoint[2] = vec2d(100, 200);
+    u.npoint[3] = vec2d(-10, 150);
 
-    u.conv = vec2d::project(u.point, u.npoint);
+    u.conv = vec2d::project(u.npoint, u.point);
     std::cerr << "conv:\n" << (std::string)u.conv.transposed() << std::endl;
-    u.p.clear();
-    u.p.resize(101*101);
-    u.v = vec2d(0.001, 0);
 }
 
-void draw(SDL* app, uint32_t winid, void* _u)
+void draw(SDL* app, Window* win)
 {
-    auto win = app->get_win(winid);
     if(!win) return;
-    auto& u = *static_cast<userdata_t*>(_u);
+    auto& u = *static_cast<userdata_t*>(app->userdata);
 
-    win->set_color(255, 255, 255);
+    win->set_colour(colour(255, 255, 255));
     win->scrclear();
 
-    u.npoint[1] += u.v;
-    u.conv = vec2d::project(u.point, u.npoint);
-    u.v *= vec2d::rotate(0.01);
+    for(int i = 0; i < 4; i++) {
+        u.npoint[i] *= vec2d::rotate(0.001);
+    }
+    u.conv = vec2d::project(u.npoint, u.point);
 
-    for(int i = 0; i <= 100; i++) {
-        for(int j = 0; j <= 100; j++) {
-            auto v = vec2d(100+j, 100+i) * u.conv;
-            //std::cout << (std::string)vec2d(100+j, 100+i) << "->" << (std::string)v << std::endl;
-            u.p[i * 101 + j] = v;
-
+    rect2d r(u.npoint, 4);
+    u.p.clear();
+    u.p.reserve(r.area());
+    
+    for(int i = 0; i < (int)r.size.get_y(); i++) {
+        for(int j = 0; j < (int)r.size.get_x(); j++) {
+            auto&& p = (r.ref + vec2d(j, i)) * u.conv;
+            if(p.get_x() < 0 || p.get_x() > 100 || p.get_y() < 0 || p.get_y() > 100) continue;
+            u.p.push_back(vec2d(j, i) + vec2d(100, 100));
         }
     }
 
-    win->set_color(0, 0, 0);
+    win->set_colour(colour(0, 0, 0));
     win->draw_points(u.p);
 }
 
 int main()
 {
     SDL app;
-    if(app.init()) {
+    if(app.is_failed()) {
         return 1;
     }
     userdata_t u;
-    app.set_user_data_ptr(&u);
+    app.userdata = &u;
     app.callback_funcs.init = init;
     app.callback_funcs.draw = draw;
     return app.mainloop();

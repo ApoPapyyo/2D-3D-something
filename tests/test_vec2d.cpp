@@ -16,7 +16,7 @@ void test_polar()
     double angles[] = {0.0, M_PI/4, M_PI*3/4, -M_PI*3/4, -M_PI/4, 3, 2, 1};
     vec2d vs[sizeof(angles)/sizeof(double)];
 
-    for(int i = 0; i < sizeof(angles)/sizeof(double); i++) vs[i] = vec2d(1, angles[i], vec2d::coord_type::Polar);
+    for(int i = 0; i < sizeof(angles)/sizeof(double); i++) vs[i] = vec2d(1, angles[i], vec2d::Polar);
 
     cerr << "test_polar()" << endl;
     for(int i = 0; i < sizeof(angles)/sizeof(double); i++) {
@@ -28,7 +28,7 @@ void test_polar()
 
 void test_abs()
 {
-    vec2d vs[] = {vec2d(25, 0), vec2d(0, 25), vec2d(15, 20), vec2d(-25, 0), vec2d(0, -25), vec2d(-15, -20), vec2d(-15, 20), vec2d(15, -20), vec2d(25, 2, vec2d::coord_type::Polar)};
+    vec2d vs[] = {vec2d(25, 0), vec2d(0, 25), vec2d(15, 20), vec2d(-25, 0), vec2d(0, -25), vec2d(-15, -20), vec2d(-15, 20), vec2d(15, -20), vec2d(25, 2, vec2d::Polar)};
     cerr << "test_abs()" << endl;
     for(auto& v: vs) {
         cerr << "(" << v.get_x() << ", "<< v.get_y()<< "), " << v.abs() << " =? 25" << endl;

@@ -106,7 +106,7 @@ public:
         return id;
     }
 
-    uint32_t mktexture(int sizex, int sizey) override
+    textureid_t mktexture(int sizex, int sizey) override
     {
         if(!inited) {
             Error("Instance is not initialized.");
@@ -118,7 +118,7 @@ public:
             return 0;
         }
 
-        uint32_t id = 1;
+        textureid_t id = 1;
         for(const auto&[i, t] : m_textures) {
             if(id == i) id++;
         }
@@ -126,7 +126,7 @@ public:
         return id;
     }
 
-    void rmtexture(uint32_t id) override
+    void rmtexture(textureid_t id) override
     {
         if(!inited) {
             Error("Instance is not initialized.");
@@ -142,7 +142,7 @@ public:
         m_textures.erase(id);
     }
 
-    uint32_t get_id() const override
+    winid_t get_id() const override
     {
         if(!inited) {
             Error("Instance is not initialized.");
@@ -151,13 +151,14 @@ public:
         return SDL_GetWindowID(m_win);
     }
 
-    void set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override
+    void set_colour(const colour& c) override
     {
         if(!inited) {
             Error("Instance is not initialized.");
             return;
         }
-        SDL_SetRenderDrawColor(m_rend, r, g, b, a);
+
+        SDL_SetRenderDrawColor(m_rend, c.get_r(), c.get_g(), c.get_b(), c.get_a());
     }
 
     void scrclear() override
@@ -272,7 +273,7 @@ public:
         SDL_RenderFillRects(m_rend, tmp.data(), tmp.size());
     }
 
-    void draw_texture(uint32_t id, rect2d pos) override
+    void draw_texture(textureid_t id, rect2d pos) override
     {
         if(!inited) {
             Error("Instance is not initialized.");
@@ -287,60 +288,58 @@ public:
     }
 };
 
+bool SDL::_init = false;
 SDL::SDL()
-    : m_windows()
-    , m_inited(false)
-    , m_user_data(nullptr)
-    , m_sdl_event(new SDL_Event)
+    : m_init_fail(true)
+    , m_windows()
     , m_exit(false)
-    , m_disabled(false)
+    , m_delay_ms(1)
+    , userdata(nullptr)
 {
-    if(SDL::created) {
-        m_disabled = true;
+    if(SDL::_init) {
+        Error("Main instance is already exists.");
         return;
     }
-    SDL::created = true;
-}
 
-SDL::~SDL()
-{
-    if(!m_disabled) for(auto& [id, w]: m_windows) {
-        delete w;
-    }
-    m_windows.clear();
-    if(m_sdl_event) delete reinterpret_cast<SDL_Event*>(m_sdl_event);
-    if(!m_disabled) SDL_Quit();
-}
-
-int SDL::init()
-{
-    if(m_disabled) return -1;
-    // SDLの初期化
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        cerr << "okazawa::SDL::init(): " << SDL_GetError() << endl;
-        return 1;
+        Error(SDL_GetError());
+        return;
     }
 
     // SDL_imageの初期化 (PNG対応)
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        cerr << "okazawa::SDL::init(): " << SDL_GetError() << endl;
-        return 1;
+        Error(SDL_GetError());
+        return;
     }
-    m_inited = true;
-    return 0;
+    m_init_fail = false;
+    SDL::_init = true;
 }
 
-uint32_t SDL::mkwindow(const string& title, int width, int height)
+SDL::~SDL()
 {
-    if(!m_inited) {
-        Error("Instance is not initialized.");
+    if(!m_init_fail) for(auto& [id, w]: m_windows) {
+        delete w;
+    }
+    m_windows.clear();
+    if(!m_init_fail) SDL_Quit();
+}
+
+bool SDL::is_failed() const
+{
+    return m_init_fail;
+}
+
+winid_t SDL::mkwindow(const string& title, int width, int height)
+{
+    if(m_init_fail) {
+        Error("Instance failed initialization.");
         return 0;
     }
 
     Window* ret = new _Window(title, width, height);
     if(!ret->is_inited()) {
         delete ret;
-        Error("window creating failed.");
+        Error("Window creating failed.");
         return 0;
     }
 
@@ -348,14 +347,14 @@ uint32_t SDL::mkwindow(const string& title, int width, int height)
     return ret->get_id();
 }
 
-void SDL::rmwindow(uint32_t winid)
+void SDL::rmwindow(winid_t winid)
 {
-    if(!m_inited) {
+    if(m_init_fail) {
         Error("Instance is not initialized.");
         return;
     }
     if(!m_windows.count(winid)) {
-        Error("no such a window (winid==" << winid << ").");
+        Error("No such a window (winid==" << winid << ").");
         return;
     }
     auto w = m_windows[winid];
@@ -367,7 +366,7 @@ void SDL::rmwindow(uint32_t winid)
 
 void SDL::rmwindow(Window* win)
 {
-    if(!m_inited) {
+    if(m_init_fail) {
         Error("Instance is not initialized.");
         return;
     }
@@ -381,23 +380,22 @@ void SDL::rmwindow(Window* win)
     if(m_windows.size() == 0) m_exit = true;
 }
 
-void SDL::set_user_data_ptr(void *ptr)
+vector<winid_t> SDL::get_winids() const
 {
-    m_user_data = ptr;
-}
-
-vector<uint32_t> SDL::get_winid() const
-{
-    vector<uint32_t> ret;
+    vector<winid_t> ret;
+    if(m_init_fail) {
+        Error("Instance is not initialized.");
+        return ret;
+    }
     for(const auto& [id, w]: m_windows) {
         ret.push_back(id);
     }
     return ret;
 }
 
-Window* SDL::get_win(uint32_t winid) const
+Window* SDL::get_win(winid_t winid) const
 {
-    if(!m_inited) {
+    if(m_init_fail) {
         Error("Instance is not initialized.");
         return nullptr;
     }
@@ -408,108 +406,128 @@ Window* SDL::get_win(uint32_t winid) const
     return nullptr;
 }
 
+void SDL::terminate()
+{
+    if(callback_funcs.terminate) callback_funcs.terminate(this);
+}
+
+void SDL::handle_event()
+{
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        switch (e.type) {
+            case SDL_QUIT: m_exit = true; break;
+
+            case SDL_APP_TERMINATING:
+                terminate();
+                std::exit(-1);
+                break;
+            case SDL_APP_LOWMEMORY: break;
+            case SDL_APP_WILLENTERBACKGROUND: break;
+            case SDL_APP_DIDENTERBACKGROUND: break;
+            case SDL_APP_WILLENTERFOREGROUND: break;
+            case SDL_APP_DIDENTERFOREGROUND: break;
+
+            case SDL_WINDOWEVENT:
+                if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
+                    // 閉じるボタンが押された
+                    rmwindow(e.window.windowID);
+                }
+                break;
+            /*
+            case SDL_SYSWMEVENT: break;
+
+            case SDL_KEYDOWN: break;
+            case SDL_KEYUP: break;
+            case SDL_TEXTEDITING: break;
+            case SDL_TEXTINPUT: break;
+            case SDL_KEYMAPCHANGED: break;
+
+            case SDL_MOUSEMOTION: break;
+            case SDL_MOUSEBUTTONDOWN: break;
+            case SDL_MOUSEBUTTONUP: break;
+            case SDL_MOUSEWHEEL: break;
+
+            case SDL_JOYAXISMOTION: break;
+            case SDL_JOYBALLMOTION: break;
+            case SDL_JOYHATMOTION: break;
+            case SDL_JOYBUTTONDOWN: break;
+            case SDL_JOYBUTTONUP: break;
+            case SDL_JOYDEVICEADDED: break;
+            case SDL_JOYDEVICEREMOVED: break;
+
+            case SDL_CONTROLLERAXISMOTION: break;
+            case SDL_CONTROLLERBUTTONDOWN: break;
+            case SDL_CONTROLLERBUTTONUP: break;
+            case SDL_CONTROLLERDEVICEADDED: break;
+            case SDL_CONTROLLERDEVICEREMOVED: break;
+            case SDL_CONTROLLERDEVICEREMAPPED: break;
+
+            case SDL_FINGERDOWN: break;
+            case SDL_FINGERUP: break;
+            case SDL_FINGERMOTION: break;
+
+            case SDL_DOLLARGESTURE: break;
+            case SDL_DOLLARRECORD: break;
+            case SDL_MULTIGESTURE: break;
+
+            case SDL_CLIPBOARDUPDATE: break;
+
+            case SDL_DROPFILE: break;
+            case SDL_DROPTEXT: break;
+            case SDL_DROPBEGIN: break;
+            case SDL_DROPCOMPLETE: break;
+
+            case SDL_AUDIODEVICEADDED: break;
+            case SDL_AUDIODEVICEREMOVED: break;
+
+            case SDL_RENDER_TARGETS_RESET: break;
+            case SDL_RENDER_DEVICE_RESET: break;
+            */
+
+            default: break;  // 未知のイベント
+        }
+    }
+}
+
+void SDL::draw()
+{
+    for(auto&[winid, win]: m_windows) {
+        if(callback_funcs.draw) callback_funcs.draw(this, win);
+        m_windows[winid]->update();
+    }
+}
+
+void SDL::init()
+{
+    if(callback_funcs.init) callback_funcs.init(this);
+}
+
+void SDL::exit()
+{
+    if(callback_funcs.exit) callback_funcs.exit(this);
+}
+
 int SDL::mainloop()
 {
-    if(!m_inited) {
+    if(m_init_fail) {
         Error("Instance is not initialized.");
         return 1;
     }
-    if(callback_funcs.draw == nullptr) {
+    if(callback_funcs.draw == nullptr && typeid(*this) == typeid(SDL)) {
         Error("draw() is not set.");
         return 1;
     }
 
-    SDL_Event& e = *reinterpret_cast<SDL_Event *>(m_sdl_event);
-
-    if(callback_funcs.init) callback_funcs.init(this, m_user_data);
+    init();
 
     while (!m_exit) {
-        while (SDL_PollEvent(&e)) {
-            switch (e.type) {
-                case SDL_QUIT: m_exit = true; break;
-
-                case SDL_APP_TERMINATING:
-                    if(callback_funcs.terminate) callback_funcs.terminate(this, m_user_data);
-                    std::exit(-1);
-                    break;
-                case SDL_APP_LOWMEMORY: break;
-                case SDL_APP_WILLENTERBACKGROUND: break;
-                case SDL_APP_DIDENTERBACKGROUND: break;
-                case SDL_APP_WILLENTERFOREGROUND: break;
-                case SDL_APP_DIDENTERFOREGROUND: break;
-
-                case SDL_WINDOWEVENT:
-                    if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
-                        // 閉じるボタンが押された
-                        rmwindow(e.window.windowID);
-                    }
-                    break;
-                /*
-                case SDL_SYSWMEVENT: break;
-
-                case SDL_KEYDOWN: break;
-                case SDL_KEYUP: break;
-                case SDL_TEXTEDITING: break;
-                case SDL_TEXTINPUT: break;
-                case SDL_KEYMAPCHANGED: break;
-
-                case SDL_MOUSEMOTION: break;
-                case SDL_MOUSEBUTTONDOWN: break;
-                case SDL_MOUSEBUTTONUP: break;
-                case SDL_MOUSEWHEEL: break;
-
-                case SDL_JOYAXISMOTION: break;
-                case SDL_JOYBALLMOTION: break;
-                case SDL_JOYHATMOTION: break;
-                case SDL_JOYBUTTONDOWN: break;
-                case SDL_JOYBUTTONUP: break;
-                case SDL_JOYDEVICEADDED: break;
-                case SDL_JOYDEVICEREMOVED: break;
-
-                case SDL_CONTROLLERAXISMOTION: break;
-                case SDL_CONTROLLERBUTTONDOWN: break;
-                case SDL_CONTROLLERBUTTONUP: break;
-                case SDL_CONTROLLERDEVICEADDED: break;
-                case SDL_CONTROLLERDEVICEREMOVED: break;
-                case SDL_CONTROLLERDEVICEREMAPPED: break;
-
-                case SDL_FINGERDOWN: break;
-                case SDL_FINGERUP: break;
-                case SDL_FINGERMOTION: break;
-
-                case SDL_DOLLARGESTURE: break;
-                case SDL_DOLLARRECORD: break;
-                case SDL_MULTIGESTURE: break;
-
-                case SDL_CLIPBOARDUPDATE: break;
-
-                case SDL_DROPFILE: break;
-                case SDL_DROPTEXT: break;
-                case SDL_DROPBEGIN: break;
-                case SDL_DROPCOMPLETE: break;
-
-                case SDL_AUDIODEVICEADDED: break;
-                case SDL_AUDIODEVICEREMOVED: break;
-
-                case SDL_RENDER_TARGETS_RESET: break;
-                case SDL_RENDER_DEVICE_RESET: break;
-                */
-
-                default: break;  // 未知のイベント
-            }
-        }
-        for(auto&[winid, win]: m_windows) {
-            callback_funcs.draw(this, winid, m_user_data);
-            m_windows[winid]->update();
-        }
-        
-        SDL_Delay(1);
+        handle_event();
+        draw();
+        SDL_Delay(m_delay_ms);
     }
-
-    if(callback_funcs.exit) callback_funcs.exit(this, m_user_data);
+    exit();
     return 0;
 }
-
-
 
 }

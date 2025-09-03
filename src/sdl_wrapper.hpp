@@ -6,19 +6,21 @@
 #include <cstdint>
 #include <map>
 #include "vec2d.hpp"
+#include "colour.hpp"
 
 namespace okazawa
 {
-
+using winid_t = uint32_t;
+using textureid_t = uint32_t;
 class Window {
 public:
     virtual ~Window();
     virtual bool is_inited() const = 0;
-    virtual uint32_t mktexture(const std::string& path)  = 0;
-    virtual uint32_t mktexture(int sizex, int sizey) = 0;
-    virtual void rmtexture(uint32_t id) = 0;
-    virtual uint32_t get_id() const = 0;
-    virtual void set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) = 0;
+    virtual textureid_t mktexture(const std::string& path)  = 0;
+    virtual textureid_t mktexture(int sizex, int sizey) = 0;
+    virtual void rmtexture(textureid_t id) = 0;
+    virtual winid_t get_id() const = 0;
+    virtual void set_colour(const colour& c) = 0;
     virtual void scrclear() = 0;
     virtual void update() = 0;
     virtual void draw_point(vec2d pos) = 0;
@@ -29,39 +31,48 @@ public:
     virtual void draw_rects(const std::vector<rect2d>& pos) = 0;
     virtual void fill_rect(rect2d pos) = 0;
     virtual void fill_rects(const std::vector<rect2d>& pos) = 0;
-    virtual void draw_texture(uint32_t id, rect2d pos) = 0;
+    virtual void draw_texture(textureid_t id, rect2d pos) = 0;
 };
-
+struct Event;
 class SDL {
-    struct callbacks {
-        void (*draw)(SDL*, uint32_t winid,void*) = nullptr;//描画
-        void (*event)(SDL*, void*) = nullptr;//イベント発生時
-        void (*exit)(SDL*,void*) = nullptr;//終了前
-        void (*terminate)(SDL*,void*) = nullptr;//異常終了時
-        void (*init)(SDL*, void*) = nullptr;//開始前
-    };
-    std::map<uint32_t, Window*> m_windows;
-    bool m_inited;
-    void* m_user_data;
-    void* m_sdl_event;
-    bool m_exit;
-    bool m_disabled;
-    inline static bool created = false;
+    static bool _init;
+    bool m_init_fail;
+protected:
+    std::map<winid_t, Window*> m_windows;
+    bool m_exit;//このフラグがtrueになるとループを抜けて終了
+    uint32_t m_delay_ms;
+    
+    //このクラスを継承すれば以下とmainloop()自体をオーバーライド可能
+    virtual void init();
+    virtual void handle_event();//イベントを処理するにはSDL.hをインクルードする必要あり
+    virtual void draw();
+    virtual void exit();
+    virtual void terminate();
 public:
-    callbacks callback_funcs;
+    //このクラスを継承せず使う場合のコールバック系
+    struct callback_func_t {
+        void (*init)(SDL*) = nullptr;
+        void (*event)(SDL*) = nullptr;
+        void (*draw)(SDL*, Window*) = nullptr;
+        void (*exit)(SDL*) = nullptr;
+        void (*terminate)(SDL*) = nullptr;
+    };
+    callback_func_t callback_funcs;
+    void* userdata;
+
     SDL();
-    ~SDL();
-    int init();
+    virtual ~SDL();
+    bool is_failed() const;//初期化に失敗したかどうか
 
-    std::vector<uint32_t> get_winid() const;
-    Window* get_win(uint32_t winid) const;
+    std::vector<winid_t> get_winids() const;
+    Window* get_win(winid_t winid) const;
+    winid_t get_winid(Window* w) const;
 
-    uint32_t mkwindow(const std::string& title, int sizex, int sizey);
-    void rmwindow(uint32_t winid);
+    virtual winid_t mkwindow(const std::string& title, int sizex, int sizey);
+    void rmwindow(winid_t winid);
     void rmwindow(Window* win);
 
-    void set_user_data_ptr(void *ptr);//コールバック関数への任意のデータへのポインタをセット
-    int mainloop();
+    virtual int mainloop();
 };
 
 }

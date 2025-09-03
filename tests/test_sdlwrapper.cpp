@@ -11,10 +11,10 @@ struct userdata_t {
     uint32_t tid;
 };
 
-void init(SDL* o, void* _u)
+void init(SDL* o)
 {
-    userdata_t& u = *reinterpret_cast<userdata_t*>(_u);
-    auto ids = o->get_winid();
+    userdata_t& u = *reinterpret_cast<userdata_t*>(o->userdata);
+    auto ids = o->get_winids();
     if(!ids.size()) return;
     auto id = ids.at(0);
     u.rectcentre = vec2d(100, 100);
@@ -30,15 +30,14 @@ void init(SDL* o, void* _u)
 
 }
 
-void draw(SDL* o, uint32_t winid, void* _u)
+void draw(SDL* o, Window* w)
 {
-    auto w = o->get_win(winid);
     if(!w) return;
-    userdata_t& u = *reinterpret_cast<userdata_t*>(_u);
-    w->set_color(255, 255, 255);
+    userdata_t& u = *reinterpret_cast<userdata_t*>(o->userdata);
+    w->set_colour(colour(255, 255, 255));
     w->scrclear();
 
-    w->set_color(0, 0, 0);
+    w->set_colour(colour(0, 0, 0));
     auto rect = rect2d(u.rectpos, vec2d(100, 100));
     if(!u.tid) w->fill_rect(rect);
     else w->draw_texture(u.tid, rect);
@@ -61,7 +60,7 @@ void draw(SDL* o, uint32_t winid, void* _u)
 int main()
 {
     SDL app;
-    if(app.init()) {
+    if(app.is_failed()) {
         return 1;
     }
 
@@ -71,7 +70,7 @@ int main()
     }
     userdata_t u;
 
-    app.set_user_data_ptr(&u);
+    app.userdata = &u;
 
     app.callback_funcs.init = init;
     app.callback_funcs.draw = draw;
