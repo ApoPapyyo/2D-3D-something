@@ -2,7 +2,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#define Error(mes) cerr << __func__<< "(): " << mes << endl
+#define Mes(mes) std::cerr << __func__<< "(): " << mes << std::endl
+#define Error(mes) std::cerr << "Error: " << __func__<< "(): " << mes << std::endl
+#define Warn(mes) std::cerr << "Warning: " << __func__ << "(): " << mes << std::endl
 
 extern "C" {
 #include <SDL2/SDL.h>
@@ -322,6 +324,7 @@ SDL::~SDL()
     }
     m_windows.clear();
     if(!m_init_fail) SDL_Quit();
+    Mes("Destroying completed");
 }
 
 bool SDL::is_failed() const
@@ -422,11 +425,6 @@ void SDL::handle_event()
                 terminate();
                 std::exit(-1);
                 break;
-            case SDL_APP_LOWMEMORY: break;
-            case SDL_APP_WILLENTERBACKGROUND: break;
-            case SDL_APP_DIDENTERBACKGROUND: break;
-            case SDL_APP_WILLENTERFOREGROUND: break;
-            case SDL_APP_DIDENTERFOREGROUND: break;
 
             case SDL_WINDOWEVENT:
                 if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
@@ -436,7 +434,11 @@ void SDL::handle_event()
                 break;
             /*
             case SDL_SYSWMEVENT: break;
-
+            case SDL_APP_LOWMEMORY: break;
+            case SDL_APP_WILLENTERBACKGROUND: break;
+            case SDL_APP_DIDENTERBACKGROUND: break;
+            case SDL_APP_WILLENTERFOREGROUND: break;
+            case SDL_APP_DIDENTERFOREGROUND: break;
             case SDL_KEYDOWN: break;
             case SDL_KEYUP: break;
             case SDL_TEXTEDITING: break;
@@ -515,8 +517,7 @@ int SDL::mainloop()
         return 1;
     }
     if(callback_funcs.draw == nullptr && typeid(*this) == typeid(SDL)) {
-        Error("draw() is not set.");
-        return 1;
+        Warn("draw() is not set.");
     }
 
     init();
