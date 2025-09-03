@@ -187,7 +187,7 @@ public:
             Error("Instance is not initialized.");
             return;
         }
-        SDL_RenderDrawPoint(m_rend, pos.get_x(), pos.get_y());
+        SDL_RenderDrawPoint(m_rend, (int)pos.get_x(), (int)pos.get_y());
     }
 
     void draw_points(const vector<vec2d>& pos) override
@@ -199,7 +199,7 @@ public:
         vector<SDL_Point> tmp(pos.size());
         int i = 0;
         for(const auto& p: pos) {
-            tmp[i++] = (SDL_Point){p.get_x(), p.get_y()};
+            tmp[i++] = (SDL_Point){(int)p.get_x(), (int)p.get_y()};
         }
         SDL_RenderDrawPoints(m_rend, tmp.data(), tmp.size());
     }
@@ -210,7 +210,7 @@ public:
             Error("Instance is not initialized.");
             return;
         }
-        SDL_RenderDrawLine(m_rend, pos.begin.get_x(), pos.begin.get_y(), pos.end.get_x(), pos.end.get_y());
+        SDL_RenderDrawLine(m_rend, (int)pos.begin.get_x(), (int)pos.begin.get_y(), (int)pos.end.get_x(), (int)pos.end.get_y());
     }
 
     void draw_lines(const vector<vec2d>& pos) override
@@ -222,7 +222,7 @@ public:
         vector<SDL_Point> tmp(pos.size());
         int i = 0;
         for(const auto& p: pos) {
-            tmp[i++] = (SDL_Point){p.get_x(), p.get_y()};
+            tmp[i++] = (SDL_Point){(int)p.get_x(), (int)p.get_y()};
         }
         SDL_RenderDrawLines(m_rend, tmp.data(), tmp.size());
     }
@@ -233,7 +233,7 @@ public:
             Error("Instance is not initialized.");
             return;
         }
-        SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
+        SDL_Rect tmp = {(int)pos.ref.get_x(), (int)pos.ref.get_y(), (int)pos.size.get_x(), (int)pos.size.get_y()};
         SDL_RenderDrawRect(m_rend, &tmp);
     }
 
@@ -246,7 +246,7 @@ public:
         vector<SDL_Rect> tmp(pos.size());
         int i = 0;
          for(const auto& p: pos) {
-            tmp[i++] = (SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()};
+            tmp[i++] = (SDL_Rect){(int)p.ref.get_x(), (int)p.ref.get_y(), (int)p.size.get_x(), (int)p.size.get_y()};
         }
         SDL_RenderDrawRects(m_rend, tmp.data(), tmp.size());
     }
@@ -257,7 +257,7 @@ public:
             Error("Instance is not initialized.");
             return;
         }
-        SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
+        SDL_Rect tmp = {(int)pos.ref.get_x(), (int)pos.ref.get_y(), (int)pos.size.get_x(), (int)pos.size.get_y()};
         SDL_RenderFillRect(m_rend, &tmp);
     }
 
@@ -270,7 +270,7 @@ public:
         vector<SDL_Rect> tmp(pos.size());
         int i = 0;
          for(const auto& p: pos) {
-            tmp[i++] = (SDL_Rect){p.ref.get_x(), p.ref.get_y(), p.size.get_x(), p.size.get_y()};
+            tmp[i++] = (SDL_Rect){(int)p.ref.get_x(), (int)p.ref.get_y(), (int)p.size.get_x(), (int)p.size.get_y()};
         }
         SDL_RenderFillRects(m_rend, tmp.data(), tmp.size());
     }
@@ -285,7 +285,7 @@ public:
            Error("no such a texture.");
             return;
         }
-        SDL_Rect tmp = {pos.ref.get_x(), pos.ref.get_y(), pos.size.get_x(), pos.size.get_y()};
+        SDL_Rect tmp = {(int)pos.ref.get_x(), (int)pos.ref.get_y(), (int)pos.size.get_x(), (int)pos.size.get_y()};
         SDL_RenderCopy(m_rend, m_textures[id], NULL, &tmp);
     }
 };
