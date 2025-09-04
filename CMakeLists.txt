@@ -1,19 +1,17 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 project(3dg)
 
 # C++17を使用
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+include_directories(${CMAKE_SOURCE_DIR}/src)
 # SDL2の設定
-
 if(APPLE)
     message(STATUS "Building on macOS")
     find_package(SDL2 REQUIRED)
     find_package(SDL2_image REQUIRED)
     # macOS専用の設定を書く
     include_directories(
-        ${CMAKE_SOURCE_DIR}/src
         ${SDL2_INCLUDE_DIRS}
         /opt/homebrew/opt/sdl2_image/include
     )
@@ -24,9 +22,23 @@ elseif(UNIX)
     find_package(SDL2_image REQUIRED)
 
     include_directories(
-        ${CMAKE_SOURCE_DIR}/src
         ${SDL2_INCLUDE_DIRS}
     )
+endif()
+
+if(APPLE)
+    find_package(OpenCL REQUIRED)
+
+    include_directories(
+        ${OpenCL_INCLUDE_DIRS}
+    )
+elseif(UNIX)
+    find_package(OpenCL REQUIRED)
+
+    include_directories(
+        ${OpenCL_INCLUDE_DIRS}
+    )
+
 endif()
 
 
@@ -42,6 +54,7 @@ target_link_libraries(lib3dg PUBLIC
     SDL2::SDL2
     SDL2::SDL2main
     SDL2_image::SDL2_image
+    OpenCL::OpenCL
 )
 
 
