@@ -20,6 +20,7 @@ extern "C" {
 namespace okazawa
 {
 struct buffer_t {
+    size_t tsize;
     size_t size;
     cl_mem buf;
 };
@@ -140,9 +141,10 @@ void OpenCL::clear_kernels()
     for(auto& [id, k]: _m->kernels) {
         clReleaseKernel(k);
     }
+    _m->kernels.clear();
 }
 
-int OpenCL::add_queue_kernel(const cl_kernel_id_t& kn, cl_buffer_id_t arg_id, size_t global_size)
+int OpenCL::add_queue_kernel(const cl_kernel_id_t& kn, cl_buffer_id_t arg_id)
 {
     if(_init_fail) {
         Error("インスタンスの初期化に失敗しています。");
@@ -156,45 +158,12 @@ int OpenCL::add_queue_kernel(const cl_kernel_id_t& kn, cl_buffer_id_t arg_id, si
         Error("そのようなバッファ(ID==" << arg_id << ")はアップロードされていません。");
         return 1;
     }
-    if(!global_size) {
-        global_size = std::min(_m->bufs[arg_id].size, (size_t)1024);
-    }
-    auto k = _m->kernels[kn];
-    auto b = _m->bufs[arg_id].buf;
-    clSetKernelArg(k, 0, sizeof(cl_mem), b);
-
-    clEnqueueNDRangeKernel(_m->queue, k, 1, nullptr, &global_size, nullptr, 0, nullptr, nullptr);
-
-    return 0;
-}
-
-int OpenCL::add_queue_kernel(const cl_kernel_id_t& kn, const std::vector<cl_buffer_id_t>& arg_ids, size_t global_size)
-{
-    if(_init_fail) {
-        Error("インスタンスの初期化に失敗しています。");
-        return 1;
-    }
-    if(!_m->kernels.count(kn)) {
-        Error(kn << ": そのようなカーネルはありません。");
-        return 1;
-    }
-    for(const auto& id: arg_ids) {
-        if(!_m->bufs.count(id)) {
-            Error("そのようなバッファ(ID==" << id << ")はアップロードされていません。");
-            return 1;
-        }
-    }
     
     auto k = _m->kernels[kn];
-    size_t s = 0;
-    for(const auto& id: arg_ids) {
-        auto b = _m->bufs[id].buf;
-        s = std::max(_m->bufs[id].size, s);
-        clSetKernelArg(k, 0, sizeof(cl_mem), b);
-    }
-    if(!global_size) {
-        global_size = std::min(s, (size_t)1024);
-    }
+    auto b = _m->bufs[arg_id].buf;
+    clSetKernelArg(k, 0, sizeof(cl_mem), &b);
+
+    size_t global_size = _m->bufs[arg_id].size;
 
     clEnqueueNDRangeKernel(_m->queue, k, 1, nullptr, &global_size, nullptr, 0, nullptr, nullptr);
 
@@ -210,12 +179,12 @@ cl_buffer_id_t OpenCL::add_queue_upload(const buffer_metadata data)
     cl_int err;
     cl_mem buf = clCreateBuffer(_m->context,
                                 CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                data.size, nullptr, &err);
+                                data.size*data.tsize, data.buf, &err);
     err = clEnqueueWriteBuffer(_m->queue,      // コマンドキュー
                            buf,        // デバイス側バッファ
                            CL_TRUE,    // CL_TRUE: ブロッキング（完了まで待つ）
                            0,          // バッファ内のオフセット
-                           data.size, // コピーするサイズ
+                           data.size*data.tsize, // コピーするサイズ
                            data.buf,  // コピー元のホストデータ
                            0, nullptr, nullptr);   // イベント依存なし
     cl_buffer_id_t i = 1;
@@ -224,6 +193,7 @@ cl_buffer_id_t OpenCL::add_queue_upload(const buffer_metadata data)
     }
     _m->bufs[i].buf = buf;
     _m->bufs[i].size = data.size;
+    _m->bufs[i].tsize = data.tsize;
     return i;
 }
 
@@ -238,7 +208,7 @@ int OpenCL::add_queue_download(cl_buffer_id_t id, buffer_metadata data)
         return 1;
     }
 
-    clEnqueueReadBuffer(_m->queue, _m->bufs[id].buf, CL_TRUE, 0, data.size, data.buf, 0, NULL, NULL);
+    clEnqueueReadBuffer(_m->queue, _m->bufs[id].buf, CL_TRUE, 0, data.size*data.tsize, data.buf, 0, NULL, NULL);
     return 0;
 }
 
