@@ -7,30 +7,30 @@
 namespace okazawa
 {
 
-using v2mat_pure = matrix<1, 2, double>;
-using v2mat = matrix<1, 3, double>;
-using v2convmat = matrix<3, 3, double>;
+using v2mat_pure = matrix<1, 2, float>;
+using v2mat = matrix<1, 3, float>;
+using v2convmat = matrix<3, 3, float>;
 
 class vec2d {
     v2mat_pure m_data;
-    double& x;
-    double& y;
+    float& x;
+    float& y;
 public:
     enum coord_type { Cartesian, Polar };
     vec2d();
-    vec2d(double a, double b, coord_type t = Cartesian);
+    vec2d(float a, float b, coord_type t = Cartesian);
     vec2d(const v2mat& d);
     vec2d(const v2mat_pure& d);
     vec2d(const vec2d& d);
 
-    double get_x() const;
-    double get_y() const;
-    double abs() const;
-    double polar() const;
-    void set_x(double x);
-    void set_y(double y);
-    void set_abs(double a);
-    void set_polar(double th);
+    float get_x() const;
+    float get_y() const;
+    float abs() const;
+    float polar() const;
+    void set_x(float x);
+    void set_y(float y);
+    void set_abs(float a);
+    void set_polar(float th);
 
     operator v2mat() const;
     explicit operator v2mat_pure() const;
@@ -41,28 +41,28 @@ public:
     vec2d& operator+=(const vec2d& a);
     vec2d& operator-=(const vec2d& a);
     vec2d& operator*=(const vec2d& a);
-    vec2d& operator*=(double a);
+    vec2d& operator*=(float a);
     vec2d& operator*=(const v2convmat& a);
     vec2d& operator/=(const vec2d& a);
-    vec2d& operator/=(double a);
+    vec2d& operator/=(float a);
     vec2d operator-() const;
 
     friend vec2d operator+(const vec2d& a, const vec2d& b);
     friend vec2d operator-(const vec2d& a, const vec2d& b);
     friend vec2d operator*(const vec2d& a, const vec2d& b);
     friend vec2d operator/(const vec2d& a, const vec2d& b);
-    friend vec2d operator*(const vec2d& a, double b);
-    friend vec2d operator/(const vec2d& a, double b);
+    friend vec2d operator*(const vec2d& a, float b);
+    friend vec2d operator/(const vec2d& a, float b);
     friend vec2d operator*(const vec2d& a, const v2convmat& b);
-    friend bool operator==(const vec2d& a, const vec2d& b);//doubleの微小な誤差を許容する
+    friend bool operator==(const vec2d& a, const vec2d& b);//floatの微小な誤差を許容する
     friend bool operator!=(const vec2d&a, const vec2d& b);
 
     static v2convmat move(const vec2d& diff);//平行移動用の行列出力
-    static v2convmat rotate(double th);//回転用の行列出力
-    static v2convmat scale(double n);//再スケーリング用行列出力
-    static v2convmat scale(double nx, double ny);
-    static v2convmat skew_x(double th);//せん断
-    static v2convmat skew_y(double th);
+    static v2convmat rotate(float th);//回転用の行列出力
+    static v2convmat scale(float n);//再スケーリング用行列出力
+    static v2convmat scale(float nx, float ny);
+    static v2convmat skew_x(float th);//せん断
+    static v2convmat skew_y(float th);
     static v2convmat reflect_x();
     static v2convmat reflect_y();
     static v2convmat reflect_xy();
@@ -105,7 +105,7 @@ struct rect2d {
         , size()
     {
         if(!points.size()) return;
-        double xmin = points[0].get_x(), xmax = points[0].get_x(), ymin = points[0].get_y(), ymax = points[0].get_y();
+        float xmin = points[0].get_x(), xmax = points[0].get_x(), ymin = points[0].get_y(), ymax = points[0].get_y();
         for(const auto& p: points) {
             if(p.get_x() < xmin) xmin = p.get_x();
             else if(p.get_x() > xmax) xmax = p.get_x();
@@ -120,7 +120,7 @@ struct rect2d {
         , size()
     {
         if(!s) return;
-        double xmin = points[0].get_x(), xmax = points[0].get_x(), ymin = points[0].get_y(), ymax = points[0].get_y();
+        float xmin = points[0].get_x(), xmax = points[0].get_x(), ymin = points[0].get_y(), ymax = points[0].get_y();
         for(int i = 0; i < s; i++) {
             const auto& p = points[i];
             if(p.get_x() < xmin) xmin = p.get_x();
@@ -131,7 +131,7 @@ struct rect2d {
         ref = vec2d(xmin, ymin);
         size = vec2d(xmax-xmin, ymax-ymin);
     }
-    inline double area() const
+    inline float area() const
     {
         return size.get_x() * size.get_y();
     }

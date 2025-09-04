@@ -10,7 +10,7 @@ vec2d::vec2d()
     , y(m_data[0][1])
 {}
 
-vec2d::vec2d(double a, double b, coord_type t)
+vec2d::vec2d(float a, float b, coord_type t)
     : m_data()
     , x(m_data[0][0])
     , y(m_data[0][1])
@@ -50,44 +50,44 @@ vec2d::vec2d(const vec2d& d)
     , y(m_data[0][1])
 {}
 
-double vec2d::get_x() const
+float vec2d::get_x() const
 {
     return x;
 }
 
-double vec2d::get_y() const
+float vec2d::get_y() const
 {
     return y;
 }
 
-double vec2d::abs() const
+float vec2d::abs() const
 {
     return std::sqrt(m_data * m_data.transposed());
 }
 
-double vec2d::polar() const
+float vec2d::polar() const
 {
     return atan2(y, x);
 }
 
-void vec2d::set_x(double _x)
+void vec2d::set_x(float _x)
 {
     x = _x;
 }
 
-void vec2d::set_y(double _y)
+void vec2d::set_y(float _y)
 {
     y = _y;
 }
 
-void vec2d::set_abs(double a)
+void vec2d::set_abs(float a)
 {
     auto _abs = abs();
     x = x / _abs * a;
     y = y / _abs * a;
 }
 
-void vec2d::set_polar(double th)
+void vec2d::set_polar(float th)
 {
     auto _abs = abs();
     x = _abs * std::cos(th);
@@ -138,13 +138,13 @@ vec2d operator/(const vec2d& a, const vec2d& b)
     return ret;
 }
 
-vec2d operator*(const vec2d& a, double b)
+vec2d operator*(const vec2d& a, float b)
 {
     vec2d ret(a.x * b, a.y * b);
     return ret;
 }
 
-vec2d operator/(const vec2d& a, double b)
+vec2d operator/(const vec2d& a, float b)
 {
     vec2d ret(a.x/b, a.y/b);
     return ret;
@@ -191,7 +191,7 @@ vec2d& vec2d::operator*=(const vec2d& a)
     return *this;
 }
 
-vec2d& vec2d::operator*=(double a)
+vec2d& vec2d::operator*=(float a)
 {
     x *= a;
     y *= a;
@@ -211,7 +211,7 @@ vec2d& vec2d::operator/=(const vec2d& a)
     *this = *this / a;
     return *this;
 }
-vec2d& vec2d::operator/=(double a)
+vec2d& vec2d::operator/=(float a)
 {
     x /= a;
     y /= a;
@@ -245,7 +245,7 @@ v2convmat vec2d::move(const vec2d& diff)
     };
 }
 
-v2convmat vec2d::rotate(double th)
+v2convmat vec2d::rotate(float th)
 {
     return v2convmat{
         {std::cos(th), std::sin(th), 0},
@@ -254,7 +254,7 @@ v2convmat vec2d::rotate(double th)
     };
 }
 
-v2convmat vec2d::scale(double n)
+v2convmat vec2d::scale(float n)
 {
     return v2convmat{
         {n, 0, 0},
@@ -263,7 +263,7 @@ v2convmat vec2d::scale(double n)
     };
 }
 
-v2convmat vec2d::scale(double nx, double ny)
+v2convmat vec2d::scale(float nx, float ny)
 {
     return v2convmat{
         {nx, 0, 0},
@@ -272,7 +272,7 @@ v2convmat vec2d::scale(double nx, double ny)
     };
 }
 
-v2convmat vec2d::skew_x(double th)
+v2convmat vec2d::skew_x(float th)
 {
     if(th <= -M_PI/2 || M_PI/2 <= th) {
         return v2convmat{
@@ -288,7 +288,7 @@ v2convmat vec2d::skew_x(double th)
     };
 }
 
-v2convmat vec2d::skew_y(double th)
+v2convmat vec2d::skew_y(float th)
 {
     if(th <= -M_PI/2 || M_PI/2 <= th) {
         return v2convmat{
@@ -333,7 +333,7 @@ v2convmat vec2d::reflect_xy()
 
 v2convmat vec2d::project(const vec2d (&before)[3], const vec2d (&after)[3])
 {
-    matrix<6, 7, double> sh(0);
+    matrix<6, 7, float> sh(0);
     for(int i = 0; i < 3; i++) {
         sh[i+3][3] = sh[i][0] = before[i].get_x();
         sh[i+3][4] = sh[i][1] = before[i].get_y();
@@ -352,7 +352,7 @@ v2convmat vec2d::project(const vec2d (&before)[3], const vec2d (&after)[3])
 
 v2convmat vec2d::project(const vec2d (&before)[4], const vec2d (&after)[4])
 {
-    matrix<8, 9, double> sh(0);
+    matrix<8, 9, float> sh(0);
     for(int i = 0; i < 4; i++) {
         sh[i][0] = before[i].get_x();
         sh[i][1] = before[i].get_y();
