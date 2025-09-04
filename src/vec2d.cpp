@@ -331,6 +331,25 @@ v2convmat vec2d::reflect_xy()
     };
 }
 
+v2convmat vec2d::project(const vec2d (&before)[3], const vec2d (&after)[3])
+{
+    matrix<6, 7, double> sh(0);
+    for(int i = 0; i < 3; i++) {
+        sh[i+3][3] = sh[i][0] = before[i].get_x();
+        sh[i+3][4] = sh[i][1] = before[i].get_y();
+        sh[i+3][5] = sh[i][2] = 1;
+        sh[i][6] = after[i].get_x();
+        sh[i+3][6] = after[i].get_y();
+    }
+    auto ans = gaussian_elimination(sh);
+    v2convmat ret = {
+        {ans[0][6], ans[1][6], ans[2][6]},
+        {ans[3][6], ans[4][6], ans[5][6]},
+        {0, 0, 1}
+    };
+    return ret.transposed();
+}
+
 v2convmat vec2d::project(const vec2d (&before)[4], const vec2d (&after)[4])
 {
     matrix<8, 9, double> sh(0);
@@ -362,6 +381,34 @@ v2convmat vec2d::project(const vec2d (&before)[4], const vec2d (&after)[4])
         {ans[6][8], ans[7][8], 1.0} // h33=1で固定
     };
     return ret.transposed();
+}
+
+v2convmat vec2d::project(const std::vector<vec2d>& before, const std::vector<vec2d>& after)
+{
+    if(before.size() != after.size()) return vec2d::unit();
+    if(before.size() <= 2 || before.size() >= 5) return vec2d::unit();
+    if(before.size() == 3) {
+        vec2d b[3] = {before[0], before[1], before[2]}, a[3] = {after[0], after[1], after[2]};
+        return vec2d::project(b, a);
+    } else {
+        vec2d b[4] = {before[0], before[1], before[2], before[3]}, a[4] = {after[0], after[1], after[2], after[3]};
+        return vec2d::project(b, a);
+    }
+}
+
+std::vector<vec2d>& operator*=(std::vector<vec2d>& a, v2convmat b)
+{
+    for(auto& v: a){
+        v *= b;
+    }
+    return a;
+}
+
+std::vector<vec2d> operator*(const std::vector<vec2d>& a, v2convmat b)
+{
+    std::vector<vec2d> ret(a.size());
+    for(int i = 0; i < a.size(); i++) ret[i] = a[i] * b;
+    return ret;
 }
 
 }

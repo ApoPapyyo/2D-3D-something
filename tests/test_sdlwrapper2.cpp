@@ -59,7 +59,7 @@ protected:
             p.reserve(r.area());
             for (int i = 0; i < (int)r.size.get_y(); i++) {
                 for (int j = 0; j < (int)r.size.get_x(); j++) {
-                    auto &&t = (r.ref + vec2d(j, i)) * conv;
+                    auto&& t = (r.ref + vec2d(j, i)) * conv;
                     if (t.get_x() < 0 || t.get_x() > 100 || t.get_y() < 0 || t.get_y() > 100)
                         continue;
                     p.push_back(r.ref + vec2d(j, i)+ vec2d(200, 200));

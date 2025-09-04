@@ -66,8 +66,17 @@ public:
     static v2convmat reflect_x();
     static v2convmat reflect_y();
     static v2convmat reflect_xy();
+    static v2convmat project(const vec2d (&before)[3], const vec2d (&after)[3]);
     static v2convmat project(const vec2d (&before)[4], const vec2d (&after)[4]);
+    static v2convmat project(const std::vector<vec2d>& before, const std::vector<vec2d>& after);
+    inline static v2convmat unit()
+    {
+        return v2convmat{{1,0,0},{0,1,0},{0,0,1}};
+    }
 };
+
+std::vector<vec2d>& operator*=(std::vector<vec2d>& a, v2convmat b);
+std::vector<vec2d> operator*(const std::vector<vec2d>& a, v2convmat b);
 
 struct line2d {
     vec2d begin, end;
@@ -124,8 +133,15 @@ struct rect2d {
     }
     inline double area() const
     {
-        auto a = static_cast<v2mat_pure>(size);
-        return a * column_vector<2, double>({1.0, 1.0});
+        return size.get_x() * size.get_y();
+    }
+    inline std::vector<vec2d> get_points() const
+    {
+        std::vector<vec2d> ret(area());
+        for(int i = 0; i < (int)size.get_y(); i++)
+            for(int j = 0; j < (int)size.get_x(); j++)
+                ret[i*(int)(size.get_x()) + j] = ref + vec2d(j, i);
+        return ret;
     }
 };
 
