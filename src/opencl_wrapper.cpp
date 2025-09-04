@@ -5,7 +5,12 @@
 #include "opencl_wrapper.hpp"
 
 extern "C" {
+#ifdef __MACH__
+#include <OpenCL/opencl.h>
+#endif
+#ifdef __linux__
 #include <CL/cl.h>
+#endif
 }
 
 #define Mes(mes) std::cerr << __func__<< "(): " << mes << std::endl
