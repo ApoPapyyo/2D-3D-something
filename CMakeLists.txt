@@ -27,16 +27,16 @@ elseif(UNIX)
 endif()
 
 if(APPLE)
-    find_package(OpenCL REQUIRED)
+    find_package(OpenGL REQUIRED)
 
     include_directories(
-        ${OpenCL_INCLUDE_DIRS}
+        ${OPENGL_INCLUDE_DIRS}
     )
 elseif(UNIX)
-    find_package(OpenCL REQUIRED)
+    find_package(OpenGL REQUIRED)
 
     include_directories(
-        ${OpenCL_INCLUDE_DIRS}
+        ${OPENGL_INCLUDE_DIRS}
     )
 
 endif()
@@ -54,7 +54,7 @@ target_link_libraries(lib3dg PUBLIC
     SDL2::SDL2
     SDL2::SDL2main
     SDL2_image::SDL2_image
-    OpenCL::OpenCL
+    OpenGL::OpenGL
 )
 
 

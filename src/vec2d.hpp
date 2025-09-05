@@ -47,6 +47,7 @@ public:
     vec2d& operator/=(float a);
     vec2d operator-() const;
 
+    friend class vec2d_vram;
     friend vec2d operator+(const vec2d& a, const vec2d& b);
     friend vec2d operator-(const vec2d& a, const vec2d& b);
     friend vec2d operator*(const vec2d& a, const vec2d& b);

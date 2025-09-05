@@ -9,6 +9,9 @@
 extern "C" {
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#ifdef MADA
+#include <GL/glew.h>
+#endif
 }
 
 namespace okazawa
@@ -24,11 +27,13 @@ Window::~Window()
 {
 }
 
-class _Window : public Window{
+class _Window : public Window {
     SDL_Window *m_win;
     SDL_Renderer *m_rend;
+    SDL_GLContext m_gl;
     map<uint32_t, SDL_Texture*> m_textures;
     bool inited;
+    inline static bool gl_inited = false;
 public:
     _Window(const string& title, int width, int height)
         : m_win(nullptr)
@@ -47,6 +52,27 @@ public:
             Error(SDL_GetError());
             return;
         }
+#ifdef MADA
+        m_gl = SDL_GL_CreateContext(m_win);
+        if (!m_gl) {
+            Error("SDL_GL_CreateContext failed: " << SDL_GetError());
+            SDL_DestroyWindow(m_win);
+            m_win = nullptr;
+            return;
+        }
+
+        if(!_Window::gl_inited) {
+            glewExperimental = GL_TRUE;
+            if (glewInit() != GLEW_OK) {
+                printf("Failed to initialize GLEW\n");
+                SDL_GL_DeleteContext(glContext);
+                SDL_DestroyWindow(window);
+                SDL_Quit();
+                return -1;
+            }
+            _Window::gl_inited = true;
+        }
+#endif
 
         m_rend = SDL_CreateRenderer(m_win, -1, SDL_RENDERER_ACCELERATED);
         if(!m_rend) {
@@ -313,6 +339,10 @@ SDL::SDL()
         Error(SDL_GetError());
         return;
     }
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     m_init_fail = false;
     SDL::_init = true;
 }

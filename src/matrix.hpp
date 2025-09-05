@@ -11,28 +11,28 @@
 
 namespace okazawa
 {
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 class matrix;
 
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 matrix<M, N, T> operator+(const matrix<M, N, T>& a, const matrix<M, N, T>& b);
 
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 matrix<M, N, T> operator-(const matrix<M, N, T>& a, const matrix<M, N, T>& b);
 
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 matrix<M, N, T> operator*(const T& a, const matrix<M, N, T>& b);
 
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 matrix<M, N, T> operator*(const matrix<M, N, T>&a, const T& b);
 
-template <int N, typename T = double>
+template <int N, typename T = float>
 T operator*(const matrix<1, N, T>& a, const matrix<N, 1, T>& b);
 
-template <int M, int N, int P, typename T = double>
+template <int M, int N, int P, typename T = float>
 matrix<M, P, T> operator*(const matrix<M, N, T>& a, const matrix<N, P, T>& b);
 
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 bool operator==(const matrix<M,N,T>& a, const matrix<M,N,T>& b);
 
 template <int M, int N, typename T>
@@ -292,7 +292,7 @@ matrix<M, P, T> operator*(const matrix<M, N, T>& a, const matrix<N, P, T>& b)
     return ret;
 }
 
-template <int N, typename T = double>
+template <int N, typename T = float>
 matrix<1, N, T> row_vector(T (&data)[N])
 {
     matrix<1, N, T> ret((T)0);
@@ -300,7 +300,7 @@ matrix<1, N, T> row_vector(T (&data)[N])
     return ret;
 }
 
-template <int N, typename T = double>
+template <int N, typename T = float>
 matrix<1, N, T> row_vector(std::initializer_list<T> init)
 {
     matrix<1, N, T> ret((T)0);
@@ -312,7 +312,7 @@ matrix<1, N, T> row_vector(std::initializer_list<T> init)
     return ret;
 }
 
-template <int N, typename T = double>
+template <int N, typename T = float>
 matrix<N, 1, T> column_vector(T (&data)[N])
 {
     matrix<N, 1, T> ret((T)0);
@@ -320,7 +320,7 @@ matrix<N, 1, T> column_vector(T (&data)[N])
     return ret;
 }
 
-template <int N, typename T = double>
+template <int N, typename T = float>
 matrix<N, 1, T> column_vector(std::initializer_list<T> init)
 {
     matrix<N, 1, T> ret((T)0);
@@ -332,13 +332,13 @@ matrix<N, 1, T> column_vector(std::initializer_list<T> init)
     return ret;
 }
 
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 bool operator!=(const matrix<M,N,T>& a, const matrix<M,N,T>& b)
 {
     return !(a == b);
 }
 
-template <int M, int N, typename T = double>
+template <int M, int N, typename T = float>
 matrix<M, N, T> gaussian_elimination(matrix<M, N, T> A)
 {
     int row = 0;
