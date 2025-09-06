@@ -2,3 +2,5 @@ build
 .vscode
 *.png
 *.txt
+.DS_Store
+._*
